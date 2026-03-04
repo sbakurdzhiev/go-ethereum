@@ -1,0 +1,12 @@
+name: CI Build
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  build:
+    if: contains(github.event.pull_request.labels.*.name, 'CI:Build') && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3

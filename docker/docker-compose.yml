@@ -2,7 +2,9 @@ version: "3.9"
 
 services:
   geth-devnet:
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-your-user}/geth-dev:latest
+    #For local tests I was using geth:test image
+    image: geth:test
+    #image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-your-user}/geth-dev:latest
     container_name: geth-devnet
     ports:
       - "8545:8545"
@@ -11,7 +13,6 @@ services:
       - geth-data:/home/geth/.ethereum
     command:
       [
-        "geth",
         "--dev",
         "--http",
         "--http.addr", "0.0.0.0",
