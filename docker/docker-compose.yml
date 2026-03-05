@@ -3,7 +3,7 @@ version: "3.9"
 services:
   geth-devnet:
     #localimage: geth-dev:test
-    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/geth-dev:latest
+    image: ghcr.io/sbakurdzhiev/geth-dev:latest
     container_name: geth-devnet
 
     ports:

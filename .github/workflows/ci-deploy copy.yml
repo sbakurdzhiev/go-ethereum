@@ -3,46 +3,54 @@ name: CI Deploy
 on:
   pull_request:
     types: [closed]
-  workflow_dispatch:
 
 jobs:
+
   deploy:
     if: contains(github.event.pull_request.labels.*.name, 'CI:Deploy') && github.event.pull_request.merged == true
+
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+          | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build Base Geth Image
         run: |
-          docker build -t ghcr.io/sbakurdzhiev/geth-dev:latest -f docker/Dockerfile.geth .
+          docker build \
+            -t ghcr.io/${{ github.repository_owner }}/geth-dev:latest \
+            -f docker/Dockerfile.geth .
 
       - name: Start Devnet
+        env:
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
         run: |
           docker compose -f docker/docker-compose.yml up -d --pull never
-          
+
           echo "Waiting for RPC..."
-          for i in {1..30}; do
+          for i in {1..20}; do
             RESPONSE=$(curl -s -X POST http://localhost:8545 \
               -H "Content-Type: application/json" \
-              --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' || true)
+              --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}')
+
             if echo "$RESPONSE" | grep -q "result"; then
               echo "RPC is ready"
               break
             fi
-            echo "Waiting..."
             sleep 3
           done
-
+          
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
+              
       - name: Install Hardhat
         working-directory: hardhat
         run: npm install
@@ -57,36 +65,21 @@ jobs:
       - name: Build Predeployed Image
         run: |
           docker build \
-            -t ghcr.io/sbakurdzhiev/geth-dev:predeployed \
-            -t ghcr.io/sbakurdzhiev/geth-dev:predeployed-${{ github.sha }} \
+            -t ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed \
+            -t ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed-${{ github.sha }} \
             -f docker/Dockerfile.predeployed .
 
       - name: Run Devnet With Predeployed Contracts
         run: |
-          docker run -d --name geth-test -p 8545:8545 \
-            ghcr.io/sbakurdzhiev/geth-dev:predeployed
-
-          echo "Waiting for RPC on predeployed..."
-          for i in {1..20}; do
-            RESPONSE=$(curl -s -X POST http://localhost:8545 \
-              -H "Content-Type: application/json" \
-              --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' || true)
-            if echo "$RESPONSE" | grep -q "result"; then
-              echo "RPC is ready"
-              break
-            fi
-            echo "Waiting..."
-            sleep 3
-          done
+          docker run -d -p 8545:8545 \
+          ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed
 
       - name: Run Hardhat Tests
-        working-directory: hardhat
-        run: npx hardhat test --network localhost
+        run: |
+          cd hardhat
+          npx hardhat test --network localhost
 
       - name: Push Image
         run: |
-          docker push ghcr.io/sbakurdzhiev/geth-dev:predeployed
-          docker push ghcr.io/sbakurdzhiev/geth-dev:predeployed-${{ github.sha }}
-
-      - name: Cleanup
-        run: docker stop geth-test || true
+          docker push ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed
+          docker push ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed-${{ github.sha }}
