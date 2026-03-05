@@ -1,12 +1,12 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-ethers");
 
 module.exports = {
-  solidity: "0.8.28",
-  defaultNetwork: "localhost",
+  solidity: "0.8.19",
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545",
-      // accounts: [...]  // optional if geth provides unlocked accounts
+      chainId: 1337
     }
   }
 };
