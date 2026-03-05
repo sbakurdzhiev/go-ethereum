@@ -22,6 +22,7 @@ services:
         "--http.api","eth,net,web3,personal",
         "--http.corsdomain","*",
         "--http.vhosts","*",
+        "--allow-insecure-unlock",
         "--unlock", "0,1,2,3,4,5,6,7,8,9",
         "--password", "/dev/null"
       ]
