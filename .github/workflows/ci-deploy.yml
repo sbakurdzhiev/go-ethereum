@@ -58,6 +58,11 @@ jobs:
         working-directory: hardhat
         run: npx hardhat run scripts/deploy.js --network localhost
 
+      - name: Extract chain data
+        run: |
+          mkdir -p devnet-data
+          docker cp geth-devnet:/root/.ethereum ./devnet-data
+
       - name: Stop Devnet
         run: docker compose -f docker/docker-compose.yml down
 
@@ -73,18 +78,25 @@ jobs:
           docker run -d --name geth-test -p 8545:8545 \
             ghcr.io/sbakurdzhiev/geth-dev:predeployed
 
-          echo "Waiting for RPC on predeployed..."
-          for i in {1..20}; do
+          set +e
+          for i in {1..30}; do
             RESPONSE=$(curl -s -X POST http://localhost:8545 \
               -H "Content-Type: application/json" \
-              --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' || true)
+              --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}')
             if echo "$RESPONSE" | grep -q "result"; then
               echo "RPC is ready"
+              READY=1
               break
             fi
             echo "Waiting..."
             sleep 3
           done
+          set -e
+
+          if [ -z "$READY" ]; then
+            echo "RPC did not become ready in time"
+            exit 1
+          fi
 
       - name: Run Hardhat Tests
         working-directory: hardhat
