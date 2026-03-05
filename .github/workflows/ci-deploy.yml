@@ -85,13 +85,8 @@ jobs:
 
       - name: Push Image
         run: |
-<<<<<<< HEAD
           docker push ghcr.io/sbakurdzhiev/geth-dev:predeployed
           docker push ghcr.io/sbakurdzhiev/geth-dev:predeployed-${{ github.sha }}
 
       - name: Cleanup
         run: docker stop geth-test || true
-=======
-          docker push ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed
-          docker push ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed-${{ github.sha }}
->>>>>>> e59b2ca5df2a45f34bbec29c6d0b8036ad906473
