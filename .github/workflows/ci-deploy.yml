@@ -23,9 +23,21 @@ jobs:
 
       - name: Start Devnet
         run: |
-          docker compose up -d
-          sleep 15
-
+          docker compose -f docker/docker-compose.yml up -d
+          echo "Waiting for RPC..."
+          for i in {1..10}; do
+            if curl -s http://localhost:8545 > /dev/null; then
+              echo "RPC is ready"
+              break
+            fi
+            sleep 3
+          done
+          
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+              
       - name: Install Hardhat
         run: |
           cd hardhat
@@ -33,17 +45,18 @@ jobs:
 
       - name: Deploy Contracts
         run: |
-          cd hardhat
+          working-directory: hardhat
           npx hardhat run scripts/deploy.js --network localhost
 
       - name: Stop Devnet
-        run: docker compose down
+        run: docker compose -f docker/docker-compose.yml down
 
       - name: Build Predeployed Image
         run: |
           docker build \
-          -t ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed \
-          -f docker/Dockerfile.predeployed .
+            -t ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed \
+            -t ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed-${{ github.sha }} \
+            -f docker/Dockerfile.predeployed .
 
       - name: Run Devnet With Predeployed Contracts
         run: |
