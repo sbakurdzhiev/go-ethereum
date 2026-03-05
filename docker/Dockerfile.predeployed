@@ -1,0 +1,9 @@
+FROM ghcr.io/YOUR_USERNAME/geth-dev:latest
+
+COPY devnet-data /root/.ethereum
+
+EXPOSE 8545 30303
+
+ENTRYPOINT ["geth"]
+
+CMD ["--http", "--http.addr", "0.0.0.0", "--http.port", "8545", "--http.api", "eth,net,web3,personal"]
