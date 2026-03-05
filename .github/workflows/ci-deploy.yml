@@ -25,18 +25,25 @@ jobs:
         run: |
           docker compose -f docker/docker-compose.yml up -d --pull never
           
-          echo "Waiting for RPC..."
+          set +e
           for i in {1..30}; do
             RESPONSE=$(curl -s -X POST http://localhost:8545 \
               -H "Content-Type: application/json" \
-              --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' || true)
+              --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}')
             if echo "$RESPONSE" | grep -q "result"; then
               echo "RPC is ready"
+              READY=1
               break
             fi
             echo "Waiting..."
             sleep 3
           done
+          set -e
+
+          if [ -z "$READY" ]; then
+            echo "RPC did not become ready in time"
+            exit 1
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
