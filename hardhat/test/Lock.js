@@ -10,9 +10,8 @@ describe("Lock (Geth-compatible tests)", function () {
   before(async function () {
     [owner, otherAccount] = await ethers.getSigners();
 
-    // Get real timestamp from Geth
     const block = await ethers.provider.getBlock("latest");
-    unlockTime = block.timestamp + 3600; // +1 hour
+    unlockTime = block.timestamp + 3600;
 
     const Lock = await ethers.getContractFactory("Lock");
     lock = await Lock.deploy(unlockTime, { value: ethers.parseEther("1") });
@@ -51,7 +50,6 @@ describe("Lock (Geth-compatible tests)", function () {
     });
 
     it("Should allow withdrawal after unlockTime", async function () {
-      // Wait until unlockTime is reached
       let block = await ethers.provider.getBlock("latest");
       while (block.timestamp < unlockTime) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
