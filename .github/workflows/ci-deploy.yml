@@ -1,0 +1,60 @@
+name: CI Deploy
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+
+  deploy:
+    if: contains(github.event.pull_request.labels.*.name, 'CI:Deploy') && github.event.pull_request.merged == true
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+          | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Start Devnet
+        run: |
+          docker compose up -d
+          sleep 15
+
+      - name: Install Hardhat
+        run: |
+          cd hardhat
+          npm install
+
+      - name: Deploy Contracts
+        run: |
+          cd hardhat
+          npx hardhat run scripts/deploy.js --network localhost
+
+      - name: Stop Devnet
+        run: docker compose down
+
+      - name: Build Predeployed Image
+        run: |
+          docker build \
+          -t ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed \
+          -f docker/Dockerfile.predeployed .
+
+      - name: Run Devnet With Predeployed Contracts
+        run: |
+          docker run -d -p 8545:8545 \
+          ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed
+
+      - name: Run Hardhat Tests
+        run: |
+          cd hardhat
+          npx hardhat test --network localhost
+
+      - name: Push Image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/geth-dev:predeployed
