@@ -6,4 +6,4 @@ EXPOSE 8545 8546 30303
 
 ENTRYPOINT ["geth"]
 
-CMD ["--dev", "--dev.period", "1", "--http", "--http.addr", "0.0.0.0", "--http.port", "8545", "--http.api", "eth,net,web3,personal", "--http.corsdomain", "*"]
+CMD ["--dev", "--dev.period", "1", "--http", "--http.addr", "0.0.0.0", "--http.port", "8545", "--http.api", "eth,net,web3,personal", "--http.corsdomain", "*" , "--unlock","0,1,2,3,4,5,6,7,8,9", "--password","/dev/null"]
