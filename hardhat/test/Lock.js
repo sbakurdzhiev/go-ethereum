@@ -5,10 +5,9 @@ describe("Lock (Geth-compatible tests)", function () {
   let lock;
   let unlockTime;
   let owner;
-  let otherAccount;
 
   before(async function () {
-    [owner, otherAccount] = await ethers.getSigners();
+    [owner] = await ethers.getSigners();
 
     const block = await ethers.provider.getBlock("latest");
     unlockTime = block.timestamp + 3600;
@@ -43,18 +42,9 @@ describe("Lock (Geth-compatible tests)", function () {
       await expect(lock.withdraw()).to.be.revertedWith("You can't withdraw yet");
     });
 
-    it("Should revert if called from another account", async function () {
-      // On a real RPC node, otherAccount cannot send transactions.
-      // We simulate the call using staticCall to validate the revert reason.
-      await expect(
-        lock.withdraw.staticCall({ from: otherAccount.address })
-      ).to.be.revertedWith("You aren't the owner");
-    });
-
-    it("Should allow withdrawal by the owner", async function () {
-      // On a real node we cannot fast-forward time, so we skip the time-based logic.
-      // We only assert that the owner *can* withdraw successfully.
-      await expect(lock.withdraw()).to.not.be.reverted;
-    });
+    // NOTE:
+    // Intentionally do NOT test:
+    // - calling from another account (no reliable second signer on real RPC)
+    // - success after unlockTime (no time travel on Geth in CI)
   });
 });
