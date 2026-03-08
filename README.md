@@ -48,7 +48,6 @@ Terraform → AWS → k3s
 ├── .github/workflows/
 │   ├── ci-build.yml
 │   ├── ci-deploy.yml
-│   └── tests.yml
 │
 ├── docker/
 │   ├── Dockerfile.geth
