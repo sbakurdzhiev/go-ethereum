@@ -61,13 +61,11 @@ Terraform → AWS → k3s
 │   ├── test/
 │   └── hardhat.config.js
 │
-├── terraform/
+├── infra/aws-k3s
 │   ├── main.tf
 │   ├── variables.tf
 │   ├── outputs.tf
-│   └── k8s-manifests/
-│       ├── deployment.yaml
-│       └── service.yaml
+│   └── user-data.sh
 │
 └── README.md
 ```
@@ -152,9 +150,9 @@ infra/
 ```
 
 ### Terraform provisions:
-- Cloud VM (AWS)  
-- Installs **k3s**  
-- Deploys your predeployed Geth image to Kubernetes  
+- Cloud VM (AWS) - user-data.sh
+- Installs **k3s**  - user-data.sh
+- Deploys your predeployed Geth image to Kubernetes - user-data.sh
 
 ### Usage:
 ```
@@ -168,23 +166,6 @@ terraform apply
 
 ---
 
-# 🔍 Bonus: Blockscout Explorer
-
-Blockscout is integrated into the Docker Compose environment.
-
-### Features:
-- Full blockchain explorer  
-- Transaction indexing  
-- Contract verification  
-- Token metadata  
-
-### Access:
-```
-http://localhost:3000
-```
-
----
-
 # 🧠 End‑to‑End Flow Summary
 
 1. Developer opens PR  
@@ -195,7 +176,7 @@ http://localhost:3000
    → Hardhat deployed  
    → Predeployed image built & pushed  
 4. Tests run against predeployed image  
-5. Terraform provisions k3s cluster  
+5. Terraform provisions k3s cluster 
 6. Devnet deployed to Kubernetes  
 
 ---
